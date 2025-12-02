@@ -2,6 +2,8 @@ proyecto_ispplus/
 ├─ main.py                  # Punto de entrada del programa (menús y flujo general)
 ├─ config.py                # Configuración global (ruta BD, URL API, etc.)
 ├─ db/                        #Jordan
+│  ├─ __init__.py           # Inicialización del módulo db
+│  ├─ ini_db.py             # Función para inicializar la base de datos
 │  ├─ connection.py         # Clase para manejar la conexión a la base de datos
 │  └─ schema.sql            # Script SQL para crear todas las tablas necesarias
 ├─ modelos/                   #Matias
@@ -23,6 +25,6 @@ proyecto_ispplus/
 │  ├─ auth_service.py       # Lógica de registro/login, hash, validaciones
 │  ├─ plan_service.py       # Lógica de negocio de planes/contratos
 │  └─ indicadores_service.py# Lógica para consultar y guardar indicadores económicos
-└─ integraciones/
+└─ integraciones/             #Jordan
    └─ indicadores_client.py # Cliente HTTP para consumir API externa de indicadores
 

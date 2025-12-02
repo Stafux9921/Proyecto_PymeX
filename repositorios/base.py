@@ -3,7 +3,7 @@ from typing import Generic, TypeVar
 
 T = TypeVar('T')
 
-class RepositorioBase(ABC, Generic[T]):
+class BaseRepositorio(ABC, Generic[T]):
     @abstractmethod
     def agregar(self, entidad: T) -> None:
         """Agrega una nueva entidad al repositorio."""

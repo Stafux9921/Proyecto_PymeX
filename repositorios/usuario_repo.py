@@ -1,19 +1,43 @@
-from typing import Optional
+# repositorios/usuario_repo.py
+
 from modelos.usuario import Usuario, RolUsuario
 from repositorios.base import BaseRepositorio
 from db.connection import db
 
 
 class UsuarioRepositorio(BaseRepositorio[Usuario]):
+
+    # ==========================================================================
+    # Métodos requeridos por BaseRepositorio (del profe)
+    # ==========================================================================
+
+    def agregar(self, usuario: Usuario) -> Usuario:
+        """
+        Método exigido por BaseRepositorio.
+        Delegamos al método 'crear', que es el real en este proyecto.
+        """
+        return self.crear(usuario)
+
+    def listar_todos(self) -> list[Usuario]:
+        """
+        Método exigido por BaseRepositorio.
+        Delegamos al método 'listar', que es el real en este proyecto.
+        """
+        return self.listar()
+
+    # ==========================================================================
+    # Métodos reales que usa el proyecto ISPPlus
+    # ==========================================================================
+
     def crear(self, usuario: Usuario) -> Usuario:
         with db.get_connection() as conn:
             cur = conn.cursor()
             cur.execute(
                 """
-                INSERT INTO usuarios (username, password_hash, rol)
+                INSERT INTO usuarios (nombre_usuario, contrasena, rol)
                 VALUES (?, ?, ?)
                 """,
-                (usuario.username, usuario.password_hash, usuario.rol.value),
+                (usuario.nombre_usuario, usuario.contrasena, usuario.rol.value)
             )
             usuario.id = cur.lastrowid
         return usuario
@@ -23,62 +47,54 @@ class UsuarioRepositorio(BaseRepositorio[Usuario]):
             cur = conn.cursor()
             cur.execute(
                 """
-                SELECT id, username, password_hash, rol
+                SELECT id, nombre_usuario, contrasena, rol
                 FROM usuarios
                 WHERE id = ?
                 """,
-                (usuario_id,),
+                (usuario_id,)
             )
-            row = cur.fetchone()
+            fila = cur.fetchone()
 
-        return self._row_to_entity(row) if row else None
+        return self._fila_a_usuario(fila) if fila else None
 
-    def obtener_por_username(self, username: str) -> Usuario | None:
+    def obtener_por_nombre(self, nombre_usuario: str) -> Usuario | None:
         with db.get_connection() as conn:
             cur = conn.cursor()
             cur.execute(
                 """
-                SELECT id, username, password_hash, rol
+                SELECT id, nombre_usuario, contrasena, rol
                 FROM usuarios
-                WHERE username = ?
+                WHERE nombre_usuario = ?
                 """,
-                (username,),
+                (nombre_usuario,)
             )
-            row = cur.fetchone()
+            fila = cur.fetchone()
 
-        return self._row_to_entity(row) if row else None
+        return self._fila_a_usuario(fila) if fila else None
 
     def listar(self) -> list[Usuario]:
         with db.get_connection() as conn:
             cur = conn.cursor()
             cur.execute(
                 """
-                SELECT id, username, password_hash, rol
+                SELECT id, nombre_usuario, contrasena, rol
                 FROM usuarios
                 """
             )
-            rows = cur.fetchall()
+            filas = cur.fetchall()
 
-        return [self._row_to_entity(r) for r in rows]
+        return [self._fila_a_usuario(f) for f in filas]
 
     def actualizar(self, usuario: Usuario) -> Usuario:
-        if usuario.id is None:
-            raise ValueError("No se puede actualizar un usuario sin id")
-
         with db.get_connection() as conn:
             cur = conn.cursor()
             cur.execute(
                 """
                 UPDATE usuarios
-                SET username = ?, password_hash = ?, rol = ?
+                SET nombre_usuario = ?, contrasena = ?, rol = ?
                 WHERE id = ?
                 """,
-                (
-                    usuario.username,
-                    usuario.password_hash,
-                    usuario.rol.value,
-                    usuario.id,
-                ),
+                (usuario.nombre_usuario, usuario.contrasena, usuario.rol.value, usuario.id)
             )
         return usuario
 
@@ -86,22 +102,17 @@ class UsuarioRepositorio(BaseRepositorio[Usuario]):
         with db.get_connection() as conn:
             cur = conn.cursor()
             cur.execute(
-                """
-                DELETE FROM usuarios
-                WHERE id = ?
-                """,
-                (usuario_id,),
+                "DELETE FROM usuarios WHERE id = ?", (usuario_id,)
             )
 
-    # ---------- Helpers internos ----------
+    # ==========================================================================
+    # Helper interno
+    # ==========================================================================
 
-    def _row_to_entity(self, row) -> Usuario:
-        """
-        row = (id, username, password_hash, rol)
-        """
+    def _fila_a_usuario(self, fila) -> Usuario:
         return Usuario(
-            id=row[0],
-            username=row[1],
-            password_hash=row[2],
-            rol=RolUsuario(row[3]),
+            id=fila[0],
+            nombre_usuario=fila[1],
+            contrasena=fila[2],
+            rol=RolUsuario(fila[3])
         )
